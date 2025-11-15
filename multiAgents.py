@@ -342,10 +342,62 @@ def betterEvaluationFunction(currentGameState: GameState):
     Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
     evaluation function (question 5).
 
-    DESCRIPTION: <write something here so we know what you did>
+    DESCRIPTION:
+    Combines Pacman's score with weighted features:
+    - rewards being closer to food and capsules,
+    - penalizes distance to active (non-scared) ghosts,
+    - rewards approaching scared ghosts,
+    - penalizes remaining food and capsules.
+    Designed to remain smooth (no infinities) to prevent expectimax from crashing.
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    if currentGameState.isWin():
+        return float("inf")
+    if currentGameState.isLose():
+        return float("-inf")
+
+    pos = currentGameState.getPacmanPosition()
+    foodList = currentGameState.getFood().asList()
+    ghostStates = currentGameState.getGhostStates()
+    capsules = currentGameState.getCapsules()
+
+    score = float(currentGameState.getScore())
+    value = score
+
+    foodCount = len(foodList)
+    value -= 3.0 * foodCount
+
+    if foodList:
+        minFoodDist = min(manhattanDistance(pos, f) for f in foodList)
+        value += 3.0 / (minFoodDist + 1.0)
+
+    dangerPenalty = 0
+    scaredBonus = 0
+
+    for ghost in ghostStates:
+        gpos = ghost.getPosition()
+        dist = manhattanDistance(pos, gpos)
+
+        if ghost.scaredTimer > 0:
+            if dist > 0:
+                scaredBonus += 5.0 / dist
+        else:
+            if dist == 0:
+                dangerPenalty += 500
+            else:
+                dangerPenalty += 10.0 / dist
+
+    value -= dangerPenalty
+    value += scaredBonus
+
+    capCount = len(capsules)
+    value -= 4.0 * capCount
+
+    if capsules:
+        minCapDist = min(manhattanDistance(pos, c) for c in capsules)
+        value += 2.0 / (minCapDist + 1.0)
+
+    return value
 
 # Abbreviation
 better = betterEvaluationFunction
