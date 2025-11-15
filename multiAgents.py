@@ -217,7 +217,64 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        def alphabeta(state, agentIndex, depth, alpha, beta):
+            if depth == self.depth or state.isWin() or state.isLose():
+                return self.evaluationFunction(state)
+
+            numAgents = state.getNumAgents()
+
+            if agentIndex == 0:
+                value = float("-inf")
+
+                for action in state.getLegalActions(agentIndex):
+                    successor = state.generateSuccessor(agentIndex, action)
+                    childValue = alphabeta(successor, 1, depth, alpha, beta)
+                    value = max(value, childValue)
+
+                    alpha = max(alpha, value)
+
+                    if value > beta:
+                        return value
+
+                return value
+
+            else:
+                value = float("inf")
+
+                nextAgent = agentIndex + 1
+                nextDepth = depth
+                if nextAgent == numAgents:
+                    nextAgent = 0
+                    nextDepth = depth + 1
+
+                for action in state.getLegalActions(agentIndex):
+                    successor = state.generateSuccessor(agentIndex, action)
+                    childValue = alphabeta(successor, nextAgent, nextDepth, alpha, beta)
+                    value = min(value, childValue)
+
+                    beta = min(beta, value)
+
+                    if value < alpha:
+                        return value
+
+                return value
+
+        bestAction = None
+        bestValue = float("-inf")
+        alpha = float("-inf")
+        beta = float("inf")
+
+        for action in gameState.getLegalActions(0):
+            successor = gameState.generateSuccessor(0, action)
+            value = alphabeta(successor, 1, 0, alpha, beta)
+
+            if value > bestValue:
+                bestValue = value
+                bestAction = action
+
+            alpha = max(alpha, bestValue)
+
+        return bestAction
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
